@@ -56,5 +56,6 @@ def calculate_true_range(car_specs, start_lat, start_lon, end_lat, end_lon, ors_
         "total_distance_km": route["distance_km"],
         "weather_used": f"{weather['temperature_c']}°C, Wind: {wind_kmh}km/h",
         "energy_used_kwh": round(total_energy_kwh, 2),
-        "battery_left_percent": round(percent_left, 1)
+        "battery_left_percent": round(percent_left, 1),
+        "3d_path": route["3d_path"]
     }

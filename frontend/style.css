@@ -1,0 +1,264 @@
+.stApp {
+    background: #f4f5fb;
+    color: #1f2937;
+}
+
+header, footer {
+    visibility: hidden;
+}
+
+.block-container {
+    padding-top: 1.5rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    max-width: 100%;
+}
+
+/* Home navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 70px;
+}
+
+.logo {
+    color: #7c5cff;
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.navlinks {
+    display: flex;
+    gap: 36px;
+    align-items: center;
+    color: #6b7280;
+    font-weight: 700;
+}
+
+.active {
+    color: #7c5cff;
+    border-bottom: 3px solid #7c5cff;
+    padding-bottom: 10px;
+}
+
+.nav-btn {
+    background: linear-gradient(135deg, #9b7cff, #6d4aff);
+    padding: 14px 24px;
+    border-radius: 999px;
+    color: white;
+}
+
+/* Home hero */
+.hero-text h1 {
+    font-size: 64px;
+    line-height: 1.12;
+    color: #1f2937;
+    margin-bottom: 25px;
+}
+
+.hero-text span {
+    color: #7c5cff;
+}
+
+.hero-text p {
+    font-size: 22px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+.feature-card {
+    background: white;
+    border: 1px solid #ebeaf5;
+    border-radius: 28px;
+    padding: 24px;
+    text-align: center;
+    color: #4b5563;
+    box-shadow: 0 18px 40px rgba(124, 92, 255, 0.08);
+}
+
+.icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+/* Form card */
+[data-testid="stVerticalBlockBorderWrapper"] {
+    background: white;
+    border: 1px solid #ebeaf5;
+    border-radius: 30px;
+    padding: 30px;
+    box-shadow: 0 22px 50px rgba(124, 92, 255, 0.10);
+}
+
+.form-title {
+    color: #7c5cff;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 20px;
+}
+
+label {
+    color: #374151 !important;
+    font-weight: 700 !important;
+}
+
+input, select {
+    background-color: #f3f4f8 !important;
+    color: #1f2937 !important;
+    border-radius: 999px !important;
+}
+
+/* Buttons */
+.stButton button {
+    background: linear-gradient(135deg, #9b7cff, #6d4aff);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 14px 18px;
+    font-weight: 800;
+    font-size: 16px;
+    box-shadow: 0 12px 25px rgba(124, 92, 255, 0.25);
+}
+
+.stButton button:hover {
+    background: linear-gradient(135deg, #8c6cff, #5d3eff);
+    color: white;
+}
+
+/* Sidebar dashboard */
+section[data-testid="stSidebar"] {
+    background: #ffffff;
+    border-right: 1px solid #ebeaf5;
+}
+
+section[data-testid="stSidebar"] * {
+    color: #1f2937;
+}
+
+section[data-testid="stSidebar"] button {
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    color: #6b7280;
+    font-weight: 700;
+    text-align: left;
+    padding: 0.8rem 1rem;
+}
+
+section[data-testid="stSidebar"] button:hover {
+    background: #f0edff;
+    color: #7c5cff;
+}
+
+/* Metric cards */
+div[data-testid="stMetric"] {
+    background: #ffffff;
+    border: 1px solid #ebeaf5;
+    border-radius: 28px;
+    padding: 22px;
+    box-shadow: 0 16px 35px rgba(124, 92, 255, 0.08);
+}
+
+div[data-testid="stMetric"] label {
+    color: #6b7280 !important;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+div[data-testid="stMetricValue"] {
+    color: #1f2937;
+    font-size: 32px;
+    font-weight: 800;
+}
+
+/* Map iframe */
+iframe {
+    border-radius: 30px;
+    border: 1px solid #ebeaf5;
+    box-shadow: 0 22px 50px rgba(124, 92, 255, 0.10);
+}
+
+/* Alerts */
+.stSuccess {
+    background: #f0edff !important;
+    border: 1px solid #ded7ff !important;
+    border-radius: 24px;
+    color: #1f2937;
+}
+
+.stInfo {
+    background: #ffffff !important;
+    border: 1px solid #ebeaf5 !important;
+    border-radius: 24px;
+}
+
+/* Tables / dataframe */
+[data-testid="stDataFrame"] {
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid #ebeaf5;
+    box-shadow: 0 16px 35px rgba(124, 92, 255, 0.06);
+}
+
+/* Progress bar */
+div[data-testid="stProgress"] > div > div > div {
+    background: linear-gradient(135deg, #9b7cff, #6d4aff);
+}
+
+/* Headings */
+h1 {
+    color: #1f2937;
+    font-size: 2.2rem;
+    font-weight: 850;
+}
+
+h2, h3 {
+    color: #1f2937;
+    font-weight: 800;
+}
+
+p, span {
+    color: #6b7280;
+}
+
+hr {
+    border-color: #ebeaf5;
+}
+.big-battery {
+    font-size: 56px;
+    font-weight: 900;
+    color: #6d4aff;
+    margin: 10px 0 16px 0;
+}
+
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: white;
+    border-radius: 26px;
+    border: 1px solid #ece9ff;
+    box-shadow: 0 16px 35px rgba(124, 92, 255, 0.08);
+    padding: 20px;
+}
+
+div[data-testid="stMetric"] {
+    background: #f8f7ff;
+    border-radius: 20px;
+    border: 1px solid #eeeaff;
+    padding: 16px;
+}
+
+div[data-testid="stMetricValue"] {
+    color: #1f2937;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+h3 {
+    margin-bottom: 14px;
+}
+
+.stSuccess {
+    background: #ecfdf5 !important;
+    border-radius: 18px;
+    border: 1px solid #bbf7d0 !important;
+}

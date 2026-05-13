@@ -6,6 +6,7 @@ from geolocation import get_coordinates
 from engine import calculate_true_range
 import os
 from dotenv import load_dotenv
+from mapping import get_route_data
 
 load_dotenv()
 
@@ -60,15 +61,25 @@ def getdata(
             start_lon=source_coords["lon"],
             end_lat=destination_coords["lat"],
             end_lon=destination_coords["lon"],
+        
             ors_key=ORS_KEY,
             weather_key=WEATHER_KEY
         )
+   
 
         if result.get("status") != "success":
             return result
 
         battery_left = result["battery_left_percent"]
+        route_points = []
 
+        for point in result["3d_path"]:
+
+         route_points.append({
+         "lat": point[1],
+         "lon": point[0],
+         "elevation": point[2]
+    })
         if battery_left < 20:
             risk = "high"
             message = "Battery may be low on arrival"
@@ -90,7 +101,8 @@ def getdata(
             "energy_used_kwh": result["energy_used_kwh"],
             "battery_left_percent": result["battery_left_percent"],
             "risk_level": risk,
-            "message": message
+            "message": message,
+            "route_points": route_points,
         }
 
     except Exception as e:
