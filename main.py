@@ -101,7 +101,9 @@ def getdata(
             "risk_level": risk,
             "message": message,
             "route_points": route_points,
-            "recommended_speed_kmh": result["recommended_speed_kmh"]
+            "regen_saved_kwh": result.get("regen_saved_kwh", 0),
+            "recommended_speed_kmh": result["recommended_speed_kmh"],
+            "surface_data": result.get("surface_data", {})
         }
 
     except Exception as e:

@@ -93,6 +93,10 @@ def show_route_planner(result):
     risk = result.get("risk_level", "N/A")
     message = result.get("message", "N/A")
     input_battery = result.get("input_battery_percentage", "N/A")
+    recommended_speed = result.get("recommended_speed_kmh", "N/A")
+    
+    
+    regen_saved = result.get("regen_saved_kwh", "0")
 
     st.title("⚡ FluxDrive Route Dashboard")
 
@@ -104,12 +108,18 @@ def show_route_planner(result):
 
     st.divider()
 
-    m1, m2, m3 = st.columns(3)
+   
+    m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Distance", f"{distance} km")
     m2.metric("Energy Used", f"{energy_used} kWh")
     m3.metric("Battery Left", f"{battery_left}%")
+    m4.metric("Optimal Speed", f"{recommended_speed} km/h") 
+    m5.metric("Regen", f"{regen_saved} kWh") 
 
     st.divider()
+
+    if recommended_speed != "N/A":
+        st.info(f" **AI Recommendation:** Keep your cruising speed around **{recommended_speed} km/h** based on the current 3D terrain and weather to guarantee you arrive safely.")
 
     left, right = st.columns([1.2, 1])
 
@@ -131,11 +141,26 @@ def show_route_planner(result):
         st.write(f"**Risk Level:** {risk}")
         st.write(f"**Arrival Battery:** {battery_left}%")
 
+        surface_mapping = {
+            0.0: "Asphalt",
+            1.0: "Unpaved / Dirt",
+            2.0: "Asphalt",
+            3.0: "Concrete (Expressway)",
+            4.0: "Cobblestone / Pavers"
+        }
+        
+        raw_surface = result.get("surface_data", {}).get("summary", [])
+        if raw_surface:
+            st.write("**Road Surface Breakdown:**")
+            for item in raw_surface:
+                mat_name = surface_mapping.get(item['value'], "Unknown")
+                dist_km = round(item['distance'] / 1000, 1) 
+                st.caption(f"- {mat_name}: {dist_km} km")
+
         try:
             st.progress(float(battery_left) / 100)
         except:
             st.progress(0)
-
 
 def show_map_view(result):
     source = result.get("source", "Source").title()
