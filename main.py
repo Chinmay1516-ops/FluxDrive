@@ -3,7 +3,7 @@ from db import SessionLocal
 from models import EVCar
 from seed import create_tables, seed_dummy_cars
 from geolocation import get_coordinates
-from engine import calculate_true_range
+from optimizer import find_optimal_speed
 import os
 from dotenv import load_dotenv
 from mapping import get_route_data
@@ -55,18 +55,16 @@ def getdata(
             "frontal_area": selected_car.frontal_area
         }
 
-        result = calculate_true_range(
+        result = find_optimal_speed(
             car_specs=car_specs,
             start_lat=source_coords["lat"],
             start_lon=source_coords["lon"],
             end_lat=destination_coords["lat"],
             end_lon=destination_coords["lon"],
-        
             ors_key=ORS_KEY,
-            weather_key=WEATHER_KEY
+            weather_key=WEATHER_KEY,
+            current_battery_percent=Battery_percentage 
         )
-   
-
         if result.get("status") != "success":
             return result
 
@@ -98,11 +96,12 @@ def getdata(
             "input_battery_percentage": Battery_percentage,
             "distance_km": result["total_distance_km"],
             "weather_used": result["weather_used"],
-            "energy_used_kwh": result["energy_used_kwh"],
+            "energy_used_kwh": result["total_energy_kwh"],
             "battery_left_percent": result["battery_left_percent"],
             "risk_level": risk,
             "message": message,
             "route_points": route_points,
+            "recommended_speed_kmh": result["recommended_speed_kmh"]
         }
 
     except Exception as e:

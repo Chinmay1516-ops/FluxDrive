@@ -18,9 +18,11 @@ def find_optimal_speed(car_specs, start_lat, start_lon, end_lat, end_lon, ors_ke
                     "status": "success",
                     "recommended_speed_kmh": test_speed,
                     "estimated_arrival_battery": round(battery_left, 1),
+                    "battery_left_percent": battery_left, 
                     "total_energy_kwh": results["energy_used_kwh"],
                     "total_distance_km": results["total_distance_km"],
-                    "weather_used": results["weather_used"]
+                    "weather_used": results["weather_used"],
+                    "3d_path": results["3d_path"] 
                 }
     
     return {

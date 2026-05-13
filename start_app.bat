@@ -1,0 +1,6 @@
+@echo off
+echo Starting FluxDrive AI Engine (Backend)...
+start cmd /k "call .venv\Scripts\activate && uvicorn main:app --reload"
+
+echo Starting FluxDrive Dashboard (Frontend)...
+start cmd /k "call .venv\Scripts\activate && cd frontend && streamlit run streamlit.py"
