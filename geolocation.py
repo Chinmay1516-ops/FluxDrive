@@ -16,7 +16,7 @@ def get_coordinates(place_name: str):
         "User-Agent": "EcoRouteEV/1.0"
     }
 
-    response = requests.get(url, params=params, headers=headers)
+    response = requests.get(url, params=params, headers=headers,timeout=10)
     data = response.json()
 
     if len(data) == 0:

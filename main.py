@@ -6,7 +6,6 @@ from geolocation import get_coordinates
 from optimizer import find_optimal_speed
 import os
 from dotenv import load_dotenv
-from mapping import get_route_data
 
 load_dotenv()
 
@@ -65,25 +64,9 @@ def getdata(
             weather_key=WEATHER_KEY,
             current_battery_percent=Battery_percentage 
         )
+
         if result.get("status") != "success":
             return result
-
-        battery_left = result["battery_left_percent"]
-        route_points = []
-
-        for point in result["3d_path"]:
-
-         route_points.append({
-         "lat": point[1],
-         "lon": point[0],
-         "elevation": point[2]
-    })
-        if battery_left < 20:
-            risk = "high"
-            message = "Battery may be low on arrival"
-        else:
-            risk = "low"
-            message = "Good to go"
 
         return {
             "status": "success",
@@ -94,16 +77,7 @@ def getdata(
             "car_model": selected_car.name,
             "battery_capacity_kwh": selected_car.battery_capacity_kwh,
             "input_battery_percentage": Battery_percentage,
-            "distance_km": result["total_distance_km"],
-            "weather_used": result["weather_used"],
-            "energy_used_kwh": result["total_energy_kwh"],
-            "battery_left_percent": result["battery_left_percent"],
-            "risk_level": risk,
-            "message": message,
-            "route_points": route_points,
-            "regen_saved_kwh": result.get("regen_saved_kwh", 0),
-            "recommended_speed_kmh": result["recommended_speed_kmh"],
-            "surface_data": result.get("surface_data", {})
+            "routes": result["routes"]
         }
 
     except Exception as e:
