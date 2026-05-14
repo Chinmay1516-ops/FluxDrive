@@ -12,9 +12,9 @@ header, footer {
 }
 
 .block-container {
-    padding-top: 2rem;
-    padding-left: 4rem;
-    padding-right: 4rem;
+    padding-top: 1rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
     max-width: 100%;
 }
 
@@ -132,4 +132,25 @@ label {
 .stButton button:hover {
     background: linear-gradient(90deg, #2ee96c, #12aa55);
     color: white;
+}
+section[data-testid="stSidebar"] {
+    display: block !important;
+    visibility: visible !important;
+    background: rgba(3, 12, 18, 0.96) !important;
+    border-right: 1px solid rgba(100, 255, 90, 0.15);
+}
+
+section[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+section[data-testid="stSidebar"] button {
+    background: rgba(5, 20, 30, 0.8);
+    border: 1px solid rgba(100, 255, 90, 0.15);
+    border-radius: 10px;
+    color: white !important;
+}
+
+section[data-testid="stSidebar"] button:hover {
+    background: rgba(25, 180, 80, 0.25);
 }
