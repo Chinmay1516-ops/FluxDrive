@@ -95,205 +95,113 @@ def show_route_planner(result):
         st.error("No routes available.")
         return
 
+    # Get backend data for the analysis panel
+    selected_idx = st.session_state.selected_route_index
+    selected_route = routes[selected_idx]
+    
+    car_model = result.get("car_model", "Tesla Model 3")
+    start_battery = result.get("input_battery_percentage", 0)
+    
+    # Real data from backend
+    arrival_battery = selected_route.get("battery_left_percent", 0)
+    rec_speed = selected_route.get("recommended_speed_kmh", 100)
+    dist = selected_route.get("total_distance_km", 0)
+    dur = selected_route.get("duration_min", 0)
+    energy = selected_route.get("total_energy_kwh", 0)
+    regen = selected_route.get("regen_saved_kwh", 0)
+
     source = result.get("source", "Source").title()
     destination = result.get("destination", "Destination").title()
 
-    route_colors = ["#39ff14", "#1e90ff", "#ff9800"]
-    route_titles = ["Recommended", "Energy Saver", "Fastest"]
+    # --- TWO COLUMN LAYOUT (Map on Left, Analysis on Right) ---
+    map_col, analysis_col = st.columns([1.8, 1])
 
-    st.markdown("## Route Planner")
+    with map_col:
+        st.markdown(f"## {source} to {destination}")
+        
+        source_coords = result.get("source_coordinates", {})
+        dest_coords = result.get("destination_coordinates", {})
 
-    top1, top2 = st.columns(2)
-    top1.metric("From", source)
-    top2.metric("To", destination)
+        m = folium.Map(
+            location=[(source_coords.get("lat", 0) + dest_coords.get("lat", 0)) / 2, 
+                      (source_coords.get("lon", 0) + dest_coords.get("lon", 0)) / 2],
+            zoom_start=9,
+            tiles="CartoDB dark_matter"
+        )
 
-    source_coords = result.get("source_coordinates", {})
-    destination_coords = result.get("destination_coordinates", {})
+        folium.Marker([source_coords.get("lat"), source_coords.get("lon")], icon=folium.Icon(color="green")).add_to(m)
+        folium.Marker([dest_coords.get("lat"), dest_coords.get("lon")], icon=folium.Icon(color="red")).add_to(m)
 
-    source_lat = source_coords.get("lat")
-    source_lon = source_coords.get("lon")
-    dest_lat = destination_coords.get("lat")
-    dest_lon = destination_coords.get("lon")
+        # Plot all routes
+        route_colors = ["#39ff14", "#1e90ff", "#ff9800"]
+        for i, route in enumerate(routes):
+            coords = route.get("3d_path", [])
+            latlon = [[p[1], p[0]] for p in coords]
+            if latlon:
+                folium.PolyLine(
+                    locations=latlon,
+                    color=route_colors[i % len(route_colors)],
+                    weight=7 if i == selected_idx else 3,
+                    opacity=1 if i == selected_idx else 0.5
+                ).add_to(m)
 
-    if not source_lat or not source_lon or not dest_lat or not dest_lon:
-        st.warning("Coordinates not available.")
-        return
+        st_folium(m, width=None, height=560)
 
-    center_lat = (source_lat + dest_lat) / 2
-    center_lon = (source_lon + dest_lon) / 2
+    with analysis_col:
+        st.markdown(f"""
+        <div class="analysis-card">
+            <div class="analysis-header">Route Analysis</div>
+            
+            <div class="stat-box">
+                <div class="metric-label">{car_model} • Start: {start_battery}%</div>
+                <div style="margin-top:10px; font-weight:600;">Predicted Battery at Arrival</div>
+                <div class="big-arrival-text">{arrival_battery}%</div>
+                <div style="height:8px; background:#1e293b; border-radius:4px; margin: 10px 0;">
+                    <div style="width:{arrival_battery}%; height:100%; background:#22c55e; border-radius:4px;"></div>
+                </div>
+                <div style="color:#22c55e; font-size:12px;">✔ Good for this trip!</div>
+            </div>
 
-    m = folium.Map(
-        location=[center_lat, center_lon],
-        zoom_start=9,
-        tiles="CartoDB dark_matter"
-    )
+            <div class="stat-box">
+                <div class="metric-label">Recommended Speed</div>
+                <div class="speed-gauge">{rec_speed} <span style="font-size:16px;">km/h</span></div>
+                <div style="text-align:center; color:#94a3b8; font-size:12px;">Optimal for efficiency</div>
+            </div>
 
-    folium.Marker(
-        [source_lat, source_lon],
-        tooltip=f"Source: {source}",
-        icon=folium.Icon(color="green", icon="play")
-    ).add_to(m)
+            <div class="stat-box">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <div class="metric-label">Total Distance</div>
+                        <div class="metric-value">{dist} km</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">Total Duration</div>
+                        <div class="metric-value">{dur} min</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">Energy Used</div>
+                        <div class="metric-value">{energy} kWh</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">Regen</div>
+                        <div class="metric-value" style="color:#22c55e;">+{regen} kWh</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    folium.Marker(
-        [dest_lat, dest_lon],
-        tooltip=f"Destination: {destination}",
-        icon=folium.Icon(color="red", icon="flag")
-    ).add_to(m)
-
-    all_points = []
-
-    for i, route in enumerate(routes):
-        coords = route.get("coordinates_3d", route.get("3d_path", []))
-        latlon = []
-
-        for point in coords:
-            if len(point) >= 2:
-                lon = point[0]
-                lat = point[1]
-                latlon.append([lat, lon])
-
-        if latlon:
-            all_points.extend(latlon)
-
-            folium.PolyLine(
-                locations=latlon,
-                color=route_colors[i % len(route_colors)],
-                weight=7 if i == st.session_state.selected_route_index else 4,
-                opacity=1 if i == st.session_state.selected_route_index else 0.55,
-                tooltip=f"Route {i + 1}"
-            ).add_to(m)
-
-    if all_points:
-        m.fit_bounds(all_points)
-
-    st_folium(m, width=None, height=360)
-
+    # Route Comparison section remains below the map/analysis split
     st.markdown("### Route Comparison")
-
-    if len(routes) == 1:
-        comparison_cols = st.columns([1, 1.4, 1])
-        usable_cols = [comparison_cols[1]]
-    elif len(routes) == 2:
-        comparison_cols = st.columns([1, 1, 1.2])
-        usable_cols = comparison_cols[:2]
-    else:
-        usable_cols = st.columns(3)
-
+    comp_cols = st.columns(len(routes))
     for i, route in enumerate(routes):
-        with usable_cols[i]:
+        with comp_cols[i]:
             with st.container(border=True):
-                title = route_titles[i] if i < len(route_titles) else f"Route {i + 1}"
-
-                battery_left = route.get("battery_left_percent", "N/A")
-                distance = route.get("total_distance_km", route.get("distance_km", "N/A"))
-                duration = route.get("duration_min", "N/A")
-                energy = route.get("total_energy_kwh", "N/A")
-                coords = route.get("coordinates_3d", route.get("3d_path", []))
-
-                elevation_status = "Moderate"
-                elevations = [p[2] for p in coords if len(p) >= 3]
-
-                if elevations:
-                    elevation_range = max(elevations) - min(elevations)
-
-                    if elevation_range < 100:
-                        elevation_status = "Low"
-                    elif elevation_range < 300:
-                        elevation_status = "Moderate"
-                    else:
-                        elevation_status = "High"
-
-                road_quality = "Good"
-                surface_values = route.get("surface_data", {}).get("values", [])
-
-                if surface_values:
-                    bad_surface_count = 0
-
-                    for block in surface_values:
-                        if block[2] in [1, 4]:
-                            bad_surface_count += 1
-
-                    if bad_surface_count == 0:
-                        road_quality = "Good"
-                    elif bad_surface_count <= 2:
-                        road_quality = "Moderate"
-                    else:
-                        road_quality = "Poor"
-
-                traffic_status = "Moderate"
-                road_values = route.get("road_type_data", {}).get("values", [])
-
-                if road_values:
-                    city_road_count = 0
-
-                    for block in road_values:
-                        if block[2] == 2:
-                            city_road_count += 1
-
-                    if city_road_count == 0:
-                        traffic_status = "Light"
-                    elif city_road_count <= 2:
-                        traffic_status = "Moderate"
-                    else:
-                        traffic_status = "Heavy"
-
-                st.markdown(f"#### {title}")
-                st.caption(f"{distance} km • {duration} min")
-
-                st.markdown(
-                    f"""
-                    <div style="font-size:30px;font-weight:900;color:{route_colors[i % len(route_colors)]};line-height:1;">
-                        {battery_left}%
-                    </div>
-                    <div style="font-size:12px;color:#9ca3af;margin-bottom:8px;">
-                        battery left
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-                graph_rows = []
-
-                for j, point in enumerate(coords):
-                    if len(point) >= 3:
-                        graph_rows.append({
-                            "point": j,
-                            "elevation": point[2]
-                        })
-
-                if graph_rows:
-                    graph_df = pd.DataFrame(graph_rows)
-
-                    st.line_chart(
-                        graph_df,
-                        x="point",
-                        y="elevation",
-                        height=120,
-                        use_container_width=True
-                    )
-                else:
-                    st.caption("Graph unavailable")
-
-                c1, c2 = st.columns(2)
-                c1.caption("Elevation")
-                c1.write(elevation_status)
-
-                c2.caption("Traffic")
-                c2.write(traffic_status)
-
-                c3, c4 = st.columns(2)
-                c3.caption("Road Quality")
-                c3.write(road_quality)
-
-                c4.caption("Energy")
-                c4.write(f"{energy} kWh")
-
-                if i == st.session_state.selected_route_index:
-                    st.success("Selected")
-                else:
-                    if st.button("Select Route", key=f"select_route_{i}", use_container_width=True):
-                        st.session_state.selected_route_index = i
-                        st.rerun()
+                st.write(f"Route {i+1}")
+                st.write(f"**{route.get('battery_left_percent')}%** left")
+                if st.button(f"Select Route {i+1}", key=f"sel_{i}", use_container_width=True):
+                    st.session_state.selected_route_index = i
+                    st.rerun()
 
 def show_analysis(result):
     battery_left = result.get("battery_left_percent", "N/A")
@@ -375,7 +283,81 @@ def show_analysis(result):
 
 
   
+def show_map_view(result):
+    st.markdown("## 🗺️ Interactive Map View")
 
+    routes = result.get("routes", [])
+    if not routes:
+        st.error("No routes available to map.")
+        return
+
+    source = result.get("source", "Source").title()
+    destination = result.get("destination", "Destination").title()
+
+    source_coords = result.get("source_coordinates", {})
+    destination_coords = result.get("destination_coordinates", {})
+
+    source_lat = source_coords.get("lat")
+    source_lon = source_coords.get("lon")
+    dest_lat = destination_coords.get("lat")
+    dest_lon = destination_coords.get("lon")
+
+    if not source_lat or not source_lon or not dest_lat or not dest_lon:
+        st.warning("Coordinates not available for mapping.")
+        return
+
+    center_lat = (source_lat + dest_lat) / 2
+    center_lon = (source_lon + dest_lon) / 2
+
+    # Create a full-screen optimized map
+    m = folium.Map(
+        location=[center_lat, center_lon],
+        zoom_start=10,
+        tiles="CartoDB dark_matter"
+    )
+
+    # Add Markers
+    folium.Marker(
+        [source_lat, source_lon],
+        tooltip=f"Start: {source}",
+        icon=folium.Icon(color="green", icon="play")
+    ).add_to(m)
+
+    folium.Marker(
+        [dest_lat, dest_lon],
+        tooltip=f"End: {destination}",
+        icon=folium.Icon(color="red", icon="flag")
+    ).add_to(m)
+
+    route_colors = ["#39ff14", "#1e90ff", "#ff9800"]
+    all_points = []
+
+    for i, route in enumerate(routes):
+        coords = route.get("coordinates_3d", route.get("3d_path", []))
+        latlon = []
+
+        for point in coords:
+            if len(point) >= 2:
+                lon = point[0]
+                lat = point[1]
+                latlon.append([lat, lon])
+
+        if latlon:
+            all_points.extend(latlon)
+            folium.PolyLine(
+                locations=latlon,
+                color=route_colors[i % len(route_colors)],
+                weight=5,
+                opacity=0.8,
+                tooltip=f"Route {i + 1}"
+            ).add_to(m)
+
+    if all_points:
+        m.fit_bounds(all_points)
+
+    # Render a large map specifically for this view
+    with st.container(border=True):
+        st_folium(m, width=None, height=600)
 
 def show_placeholder_page(title):
     st.title(title)
@@ -414,17 +396,13 @@ if st.session_state.page == "result":
 
 
 st.markdown("""
-<div class="landing-page">
-
-    <div class="navbar">
-        <div class="logo">⚡ FluxDrive</div>
-        <div class="navlinks">
-            <span class="active">Home</span>
-            <span>Vehicles</span>
-            <span class="nav-btn">Plan My Trip</span>
-        </div>
+<div class="navbar">
+    <div class="logo">⚡ FluxDrive</div>
+    <div class="navlinks">
+        <span class="active">Home</span>
+        <span>Vehicles</span>
+        <span class="nav-btn">Plan My Trip</span>
     </div>
-
 </div>
 """, unsafe_allow_html=True)
 
@@ -435,8 +413,8 @@ with left:
     <div class="hero-text">
         <h1>Plan Smarter.<br>Drive Further.</h1>
         <p>
-        Real-time route + weather + terrain intelligence<br>
-        to predict your EV’s true range.
+            Real-Time Route, Weather, & Terrain Intelligence<br>
+            To Predict Your EV’s True Range.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -468,27 +446,29 @@ with left:
         """, unsafe_allow_html=True)
 
 with right:
-    st.markdown("""
-    <div class="form-heading">Plan Your Trip</div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="form-heading">Plan Your Trip</div>', unsafe_allow_html=True)
 
-    source = st.text_input("From", placeholder="Enter starting location")
-    destination = st.text_input("To", placeholder="Enter destination")
-
+    # Labels visible above, boxes styled as steel grey below
+    source = st.text_input("From", placeholder="Enter starting location", label_visibility="visible")
+    
+    destination = st.text_input("To", placeholder="Enter destination", label_visibility="visible")
+    
     vehicle = st.selectbox(
         "Select Vehicle",
-        ["Choose your EV", "Tesla Model 3", "Tata Nexon EV", "BYD Atto 3"]
+        ["Choose your EV", "Tesla Model 3", "Tata Nexon EV", "BYD Atto 3"],
+        label_visibility="visible"
     )
 
+    # Fixed: You can now click and type in this box
     battery = st.number_input(
         "Battery Percentage (%)",
         min_value=0,
         max_value=100,
-        value=0
+        value=80,
+        label_visibility="visible"
     )
 
     calculate = st.button("Calculate Range ❯", use_container_width=True)
-
 if calculate:
     if not source or not destination:
         st.error("Please enter both From and To locations.")
