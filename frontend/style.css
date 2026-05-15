@@ -67,121 +67,117 @@ header, footer {
     color: #64ff5a;
 }
 
-/* --- Fix 3: Subheadline Styling --- */
 .hero-text p {
-    font-size: 22px;
-    color: #a0aec0; /* Soft premium gray */
+    font-size: 25px;
+    color: #e8f2f5;
     line-height: 1.6;
-    margin-bottom: 40px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
+    margin-bottom: 28px;
 }
 
-/* --- Fix 4: Feature Boxes Perfect Centering --- */
 .feature-card {
-    height: 180px; /* Slightly taller for breathing room */
-    background: rgba(15, 23, 42, 0.6); /* Deep sleek navy */
-    border: 1px solid rgba(34, 197, 94, 0.3); /* Subtle green glow */
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    height: 170px;
+    background: rgba(4, 18, 27, 0.78);
+    border: 1px solid rgba(100, 255, 90, 0.25);
+    border-radius: 22px;
+    padding: 34px 20px;
     text-align: center;
-    backdrop-filter: blur(10px);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    color: #dce7ee;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.35);
 }
 
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(34, 197, 94, 0.15);
+.icon {
+    font-size: 36px;
+    margin-bottom: 20px;
 }
 
-.feature-icon {
-    font-size: 42px; /* Much bigger, clearer icons */
-    margin-bottom: 12px;
+.form-title {
+    color: #64ff5a;
+    font-size: 34px;
+    font-weight: 900;
+    margin-bottom: 28px;
 }
 
-.feature-text {
-    color: #e2e8f0;
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.4;
+label {
+    color: #e8f2f5 !important;
+    font-weight: 700 !important;
 }
 
-/* --- Master Form UI Fix --- */
-.form-heading {
-    color: #ffffff;
-    font-size: 28px;
-    font-weight: 800;
-    margin-bottom: 24px;
-    border-bottom: 2px solid rgba(100, 255, 90, 0.5);
-    padding-bottom: 10px;
-    display: inline-block;
-}
-
-/* 1. Force containers to be exactly the same height and center text vertically */
-.stTextInput div[data-baseweb="input"], 
-.stNumberInput div[data-baseweb="input"],
-.stSelectbox div[data-baseweb="select"] > div {
-    background: rgba(15, 23, 42, 0.7) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 12px !important;
-    height: 60px !important; /* Total height */
-    display: flex !important;
-    align-items: center !important; /* Centers text vertically */
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
-}
-
-/* 2. Remove internal Streamlit padding that pushes text out of the middle */
-.stTextInput input, 
+.stTextInput input,
 .stNumberInput input {
-    color: #ffffff !important;
-    font-size: 16px !important;
-    height: 100% !important;
-    padding: 0 15px !important; /* Horizontal padding only */
-    background: transparent !important; 
-    border: none !important; 
-    box-shadow: none !important;
-    line-height: 60px !important; /* Matches container height for alignment */
-}
-
-/* 3. Style Selectbox (Dropdown) text alignment */
-.stSelectbox div[data-baseweb="select"] div {
-    color: #ffffff !important;
-    font-size: 16px !important;
-    display: flex !important;
-    align-items: center !important;
-    height: 100% !important;
-}
-
-/* 4. Active state glow */
-.stTextInput div[data-baseweb="input"]:focus-within, 
-.stNumberInput div[data-baseweb="input"]:focus-within,
-.stSelectbox div[data-baseweb="select"] > div:focus-within {
-    border-color: #64ff5a !important;
-    box-shadow: 0 0 15px rgba(100, 255, 90, 0.3) !important;
-    background: rgba(15, 23, 42, 0.9) !important;
-}
-
-/* 5. Premium Calculate Button (Matches your image gradient) */
-.stButton button {
-    height: 60px !important;
-    border-radius: 12px !important;
-    background: linear-gradient(135deg, #10b956, #067a36) !important;
+    background: #06131d !important;
     color: white !important;
-    font-size: 18px !important;
-    font-weight: 800 !important;
-    border: none !important;
-    box-shadow: 0 4px 15px rgba(16, 185, 86, 0.3) !important;
-    transition: all 0.3s ease !important;
-    margin-top: 20px !important;
+    border: 1px solid #17313e !important;
+    border-radius: 10px !important;
+    height: 52px;
+}
+
+.stSelectbox div[data-baseweb="select"] > div {
+    background: #1f2028 !important;
+    color: white !important;
+    border-radius: 10px !important;
+    min-height: 52px;
+    border: 1px solid #17313e !important;
+}
+
+.stButton button {
+    height: 64px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #22d45f, #10994c);
+    color: white;
+    font-size: 18px;
+    font-weight: 800;
+    border: none;
 }
 
 .stButton button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(16, 185, 86, 0.5) !important;
-    background: linear-gradient(135deg, #14d664, #089643) !important;
+    background: linear-gradient(90deg, #2ee96c, #12aa55);
+    color: white;
+}
+section[data-testid="stSidebar"] {
+    display: block !important;
+    visibility: visible !important;
+    background: rgba(3, 12, 18, 0.96) !important;
+    border-right: 1px solid rgba(100, 255, 90, 0.15);
+}
+
+section[data-testid="stSidebar"] * {
     color: white !important;
+}
+
+section[data-testid="stSidebar"] button {
+    background: rgba(5, 20, 30, 0.8);
+    border: 1px solid rgba(100, 255, 90, 0.15);
+    border-radius: 10px;
+    color: white !important;
+}
+
+section[data-testid="stSidebar"] button:hover {
+    background: rgba(25, 180, 80, 0.25);
+}
+div[data-testid="stMetric"] {
+    padding: 10px !important;
+    border-radius: 14px !important;
+}
+
+div[data-testid="stMetricValue"] {
+    font-size: 20px !important;
+}
+
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    padding: 12px !important;
+    border-radius: 16px !important;
+}
+
+h2 {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+h4 {
+    margin-bottom: 0.5rem !important;
+}
+
+.stProgress {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
 }
