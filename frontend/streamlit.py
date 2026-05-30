@@ -582,4 +582,3 @@ if calculate:
         except Exception as e:
             st.error("Could not connect to backend.")
             st.write(e)
-

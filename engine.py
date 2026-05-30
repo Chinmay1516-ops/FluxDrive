@@ -17,6 +17,8 @@ STOPS_PER_KM = {
     2: 2.0,  
     3: 0.0,  
 }
+MAX_COMPRESSOR_POWER_KW = 3.0
+CABIN_TEMP_THRESHOLD = 30.0
 
 def get_block_value(segment_index, blocks, default_val):
     if not blocks: return default_val 
@@ -33,7 +35,7 @@ def get_distance_km(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
-def calculate_true_range(car_specs, route, weather, target_speed_kmh=70, current_battery_percent=100):
+def calculate_true_range(car_specs, route, weather, target_speed_kmh=70, current_battery_percent=100,outside_temp=25.0,initial_cabin_temp=24.0):
     wind_kmh = weather["wind_speed_kmh"]
     points = route["3d_path"]
     
@@ -42,6 +44,12 @@ def calculate_true_range(car_specs, route, weather, target_speed_kmh=70, current
     
     surface_blocks = route.get("surface_data", {}).get("values", [])
     road_type_blocks = route.get("road_type_data", {}).get("values", [])
+    route_distance_km = route["distance_km"]
+    thermal_zone_km = route_distance_km * 0.15             #we want for 15%of our route
+    cooling_constant_km = max(1.0, thermal_zone_km / 3)
+    distance_travelled_km = 0.0                                # FIXED: Initialized distance tracker at 0 before the loop starts
+    total_hvac_energy_kwh = 0.0                                                           
+    
     
     for i in range(len(points) - 1):
         lon1, lat1, elev1 = points[i]
@@ -67,6 +75,13 @@ def calculate_true_range(car_specs, route, weather, target_speed_kmh=70, current
             rolling_coeff=current_friction
         )
         total_energy_kwh += segment_energy
+        if initial_cabin_temp > CABIN_TEMP_THRESHOLD and distance_travelled_km < thermal_zone_km:
+            decay_factor = math.exp(-distance_travelled_km / cooling_constant_km)
+            compressor_power_kw = MAX_COMPRESSOR_POWER_KW * decay_factor
+            segment_time_hr = dist_km / target_speed_kmh
+            segment_hvac_energy_kwh = compressor_power_kw * segment_time_hr
+            total_energy_kwh += segment_hvac_energy_kwh
+            total_hvac_energy_kwh += segment_hvac_energy_kwh
 
         road_category = get_block_value(i, road_type_blocks, 0)
         expected_stops_per_km = STOPS_PER_KM.get(road_category, 0.0)
@@ -76,7 +91,8 @@ def calculate_true_range(car_specs, route, weather, target_speed_kmh=70, current
             regen_per_stop = calculate_regen_energy(car_specs['weight_kg'], target_speed_kmh)
             regen_for_segment = regen_per_stop * stops_in_this_segment
             total_regen_kwh += regen_for_segment
-            total_energy_kwh -= regen_for_segment 
+            total_energy_kwh -= regen_for_segment
+        distance_travelled_km += dist_km 
         
     battery_size = car_specs['battery_capacity_kwh']
     starting_kwh = battery_size * (current_battery_percent / 100)
@@ -90,7 +106,9 @@ def calculate_true_range(car_specs, route, weather, target_speed_kmh=70, current
         "total_distance_km": route["distance_km"],
         "weather_used": f"{weather['temperature_c']}°C, Wind: {wind_kmh}km/h",
         "energy_used_kwh": round(total_energy_kwh, 2),
-        "regen_saved_kwh": round(total_regen_kwh, 2), 
+        "regen_saved_kwh": round(total_regen_kwh, 2),
+        "hvac_spent_kwh": round(total_hvac_energy_kwh, 2),
+        "thermal_soak_cabin_temp": round(initial_cabin_temp, 1), 
         "battery_left_percent": round(percent_left, 1),
         "3d_path": route["3d_path"]
     }
