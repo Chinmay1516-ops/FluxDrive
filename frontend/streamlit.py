@@ -3,6 +3,8 @@ import requests
 import folium
 import pandas as pd
 from streamlit_folium import st_folium
+import altair as alt
+import asyncio
 
 st.set_page_config(page_title="FluxDrive", layout="wide")
 
@@ -102,9 +104,8 @@ def show_route_planner(result):
 
     st.markdown("## Route Planner")
 
-    top1, top2 = st.columns(2)
-    top1.metric("From", source)
-    top2.metric("To", destination)
+    meta_left, meta_right = st.columns(2)
+    meta_left.markdown(f"**From:** {source} | **To:** {destination}")
 
     source_coords = result.get("source_coordinates", {})
     destination_coords = result.get("destination_coordinates", {})
@@ -164,23 +165,28 @@ def show_route_planner(result):
 
     if all_points:
         m.fit_bounds(all_points)
+    layout_map_col, layout_cards_col = st.columns([1.3, 1])
+    with layout_map_col:
+          st_folium(m, width=None, height=340,use_container_width=True)
 
-    st_folium(m, width=None, height=360)
+    
 
-    st.markdown("### Route Comparison")
+    # if len(routes) == 1:
+    #     comparison_cols = st.columns([1, 1.4, 1])
+    #     usable_cols = [comparison_cols[1]]
+    # elif len(routes) == 2:
+    #     comparison_cols = st.columns([1, 1, 1.2])
+    #     usable_cols = comparison_cols[:2]
+    # else:
+    #     usable_cols = st.columns(3)
 
-    if len(routes) == 1:
-        comparison_cols = st.columns([1, 1.4, 1])
-        usable_cols = [comparison_cols[1]]
-    elif len(routes) == 2:
-        comparison_cols = st.columns([1, 1, 1.2])
-        usable_cols = comparison_cols[:2]
-    else:
-        usable_cols = st.columns(3)
-
-    for i, route in enumerate(routes):
-        with usable_cols[i]:
-            with st.container(border=True):
+    # for i, route in enumerate(routes):
+    #     with usable_cols[i]:
+    with layout_cards_col:
+        st.markdown("### Options")
+        for i, route in enumerate(routes):
+           with st.container(border=True):
+                current_color = route_colors[i % len(route_colors)]
                 title = route_titles[i] if i < len(route_titles) else f"Route {i + 1}"
 
                 battery_left = route.get("battery_left_percent", "N/A")
@@ -236,67 +242,56 @@ def show_route_planner(result):
                     else:
                         traffic_status = "Heavy"
 
-                st.markdown(f"#### {title}")
-                st.caption(f"{distance} km • {duration} min")
+                # 1. Combined Compact Header Layout
+                st.markdown(f"##### {title} <span style='font-size:12px; color:#9ca3af; float:right;'>🛣️ {distance} km • ⏱️ {duration} min</span>", unsafe_allow_html=True)
+
+                # 2. Rounded Battery Format (Fixes the long float issue)
+                try:
+                    formatted_battery = f"{float(battery_left):.1f}"
+                except:
+                    formatted_battery = "N/A"
 
                 st.markdown(
                     f"""
-                    <div style="font-size:30px;font-weight:900;color:{route_colors[i % len(route_colors)]};line-height:1;">
-                        {battery_left}%
-                    </div>
-                    <div style="font-size:12px;color:#9ca3af;margin-bottom:8px;">
-                        battery left
+                    <div style="margin: 4px 0 8px 0; display: flex; align-items: baseline; gap: 8px;">
+                        <span style="font-size:24px; font-weight:900; color:{current_color}; line-height:1;">{formatted_battery}%</span>
+                        <span style="font-size:10px; color:#9ca3af; text-transform: uppercase; font-weight:700; letter-spacing:0.3px;">battery left</span>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-
-                graph_rows = []
-
-                for j, point in enumerate(coords):
-                    if len(point) >= 3:
-                        graph_rows.append({
-                            "point": j,
-                            "elevation": point[2]
-                        })
-
-                if graph_rows:
-                    graph_df = pd.DataFrame(graph_rows)
-
-                    st.line_chart(
-                        graph_df,
-                        x="point",
-                        y="elevation",
-                        height=120,
-                        use_container_width=True
-                    )
+                # 4. Streamlined Metrics Matrix Rows (Replaces c1, c2, c3, c4 column layout)
+                st.markdown(f"""
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px; margin-bottom: 12px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 2px;">
+                        <span style="color: #9ca3af;">⛰️ Elevation</span> 
+                        <span style="font-weight: 700; color: #ffffff;">{elevation_status}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 2px;">
+                        <span style="color: #9ca3af;">🚦 Traffic</span> 
+                        <span style="font-weight: 700; color: #ffffff;">{traffic_status}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 2px;">
+                        <span style="color: #9ca3af;">🛠️ Road Quality</span> 
+                        <span style="font-weight: 700; color: #ffffff;">{road_quality}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #9ca3af;">⚡ Net Energy</span> 
+                        <span style="font-weight: 700; color: {current_color};">{energy} kWh</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                if i == st.session_state.selected_route_index:
+                    st.success("Selected")
+                    if st.button("View Analysis", key=f"view_analysis_{i}", use_container_width=True, type="primary"):
+                        st.session_state.dashboard_tab = "Analysis"
+                        st.rerun()
                 else:
-                    st.caption("Graph unavailable")
-
-                c1, c2 = st.columns(2)
-                c1.caption("Elevation")
-                c1.write(elevation_status)
-
-                c2.caption("Traffic")
-                c2.write(traffic_status)
-
-                c3, c4 = st.columns(2)
-                c3.caption("Road Quality")
-                c3.write(road_quality)
-
-                c4.caption("Energy")
-                c4.write(f"{energy} kWh")
-
-            if i == st.session_state.selected_route_index:
-                st.success("Selected")
-                if st.button("View Analysis", key=f"view_analysis_{i}", use_container_width=True):
-                    st.session_state.dashboard_tab = "Analysis"
-                    st.rerun()
-            else:
-                if st.button("Select Route", key=f"select_route_{i}", use_container_width=True):
-                    st.session_state.selected_route_index = i
-                    st.session_state.dashboard_tab = "Analysis"
-                    st.rerun()
+                    if st.button("Select Route", key=f"select_route_{i}", use_container_width=True):
+                        st.session_state.selected_route_index = i
+                        st.session_state.dashboard_tab = "Analysis"
+                        st.rerun()
+                
 
 def show_analysis(result):
 
@@ -361,9 +356,9 @@ def show_analysis(result):
         """, unsafe_allow_html=True)
 
     # --- MAIN ANALYSIS LAYOUT ---
-    top_left, top_right = st.columns([1.05, 1])
+    main_left, main_right = st.columns([1 , 1])
 
-    with top_left:
+    with main_left:
         with st.container(border=True):
             st.caption("Predicted Battery at Arrival")
             st.markdown(
@@ -385,10 +380,12 @@ def show_analysis(result):
 
             st.success("Good for this trip!")
 
-    with top_right:
-        with st.container(border=True):
-            st.caption("Recommended Speed")
-            st.markdown(
+    with main_right:
+        sub_c1, sub_c2 = st.columns(2)
+        with sub_c1:
+            with st.container(border=True):
+                 st.caption("Recommended Speed")
+                 st.markdown(
                 f"""
                 <div style="font-size:42px;font-weight:900;color:#ffffff;line-height:1;">
                     {recommended_speed}
@@ -401,13 +398,10 @@ def show_analysis(result):
                 unsafe_allow_html=True
             )
 
-            try:
-                st.progress(min(float(recommended_speed) / 120, 1))
-            except:
-                st.progress(0)
-
+            with st.container(border=True):
+        
             # --- CHANGE 4: PREMIUM WEATHER BADGE ---
-            st.markdown(f"""
+                 st.markdown(f"""
             <div style="margin-top: 18px; padding: 12px 16px; background: rgba(4, 18, 27, 0.6); border: 1px solid rgba(100, 255, 90, 0.25); border-radius: 10px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
                 <div style="font-size: 24px; line-height: 1;">🌦️</div>
                 <div>
@@ -416,10 +410,29 @@ def show_analysis(result):
                 </div>
             </div>
             """, unsafe_allow_html=True)
+        with sub_c2:
+            try:
+                speed_val = float(recommended_speed)
+            except:
+                speed_val = 0.0
+            gauge_degree = min((speed_val / 120.0) * 180, 180)
+            st.markdown(f"""<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding-top: 10px;">
+                <div style="position: relative; width: 160px; height: 80px; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; width: 160px; height: 160px; border-radius: 50%; border: 12px solid rgba(255, 255, 255, 0.05); box-sizing: border-box;"></div>
+                    <div style="position: absolute; top: 0; left: 0; width: 160px; height: 160px; border-radius: 50%; border: 12px solid transparent; border-top-color: #22d45f; border-right-color: #22d45f; box-sizing: border-box; transform: rotate({-135 + (gauge_degree)}deg); transition: transform 0.5s ease;"></div>
+                    <div style="position: absolute; bottom: 0; left: 50%; width: 14px; height: 14px; background: #ffffff; border-radius: 50%; transform: translate(-50%, 50%); z-index: 10;"></div>
+                    <div style="position: absolute; bottom: 0; left: 50%; width: 4px; height: 65px; background: #ffffff; transform-origin: bottom center; transform: translate(-50%, 0) rotate({-90 + gauge_degree}deg); transition: transform 0.5s ease; border-radius: 2px; z-index: 5;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; width: 150px; margin-top: 4px; font-size: 10px; color: #6b7280; font-family: sans-serif; font-weight: 600;">
+                    <span>0</span>
+                    <span>60</span>
+                    <span>120+</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    # main_left, mid_right = st.columns([0.95, 1.15])
 
-    mid_left, mid_right = st.columns([0.95, 1.15])
-
-    with mid_left:
+    with main_left:
         with st.container(border=True):
             st.markdown("#### Battery Consumption Breakdown")
             
@@ -465,7 +478,7 @@ def show_analysis(result):
             </div>
             """, unsafe_allow_html=True)
 
-    with mid_right:
+    with main_right:
         with st.container(border=True):
             st.markdown("#### Route Elevation Profile")
 
@@ -480,13 +493,30 @@ def show_analysis(result):
 
             if elevation_rows:
                 elevation_df = pd.DataFrame(elevation_rows)
-                st.line_chart(
-                    elevation_df,
-                    x="point",
-                    y="elevation",
-                    height=170,
-                    use_container_width=True
+                chart=(alt.Chart(elevation_df)
+                    .mark_area(
+                        line={'color': '#64ff5a', 'width': 2}, # Bright neon green line on top
+                        color=alt.Gradient(                    # Fades to a deep transparent green at the bottom
+                            gradient='linear',
+                            stops=[
+                                alt.GradientStop(color='rgba(100, 255, 90, 0.4)', offset=0),
+                                alt.GradientStop(color='rgba(100, 255, 90, 0.0)', offset=1)
+                            ],
+                            x1=1, y1=0, x2=1, y2=1
+                        )
+                    )
+                    .encode(
+                        x=alt.X('point:Q', title='Point', scale=alt.Scale(zero=False)),
+                        y=alt.Y('elevation:Q', title='Elevation (m)', scale=alt.Scale(zero=False))
+                    )
+                    .properties(
+                        height=280 
+                    )
                 )
+                
+                # Render the custom Altair chart
+                st.altair_chart(chart, use_container_width=True)
+                    
             else:
                 st.info("Elevation data unavailable.")
 
@@ -562,8 +592,8 @@ def show_analysis(result):
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- FOOTER: 60/40 SPLIT LAYOUT ---
-    bot_left, bot_right = st.columns([1.4, 1])
+    # --- THREE-COLUMN SYMMETRICAL FOOTER SPLIT ---
+    bot_left, bot_mid, bot_right = st.columns([1.2, 1, 1.1])
     
     with bot_left:
         with st.container(border=True):
@@ -575,7 +605,36 @@ def show_analysis(result):
                     right.caption(f"{step.get('distance_km', 'N/A')} km")
             else:
                 st.info("Directions unavailable.")
+    with bot_mid:
+        with st.container(border=True):
+            st.markdown("#### 🔌 Route Charging Hubs")
 
+            stations_data = result.get("charging_hubs", [])
+
+            if stations_data:
+                for station in stations_data:
+                   name = station.get("name", "Charging Station")
+                   status = station.get("status", "N/A")
+                   reliability = station.get("reliability_score", "N/A")
+                   queue = station.get("queue_length", "N/A")
+                   wait = station.get("estimated_wait_time_mins", "N/A")
+                   message = station.get("status_message", "")
+
+                   status_color = "#22d45f" if status == "Available" else "#ff9800"
+
+                   st.markdown(f"""
+                    <div style="background: rgba(4, 18, 27, 0.65); border: 1px solid rgba(100, 255, 90, 0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+                        <div style="font-size: 15px; font-weight: 900; color: #ffffff;">{name}</div>
+                        <div style="margin-top: 8px; font-size: 13px; color: #dce7ee;">Status: <span style="color: {status_color}; font-weight: 900;">{status}</span></div>
+                        <div style="font-size: 13px; color: #9ca3af; margin-top: 4px;">Reliability: <b style="color:#ffffff;">{reliability}</b></div>
+                        <div style="font-size: 13px; color: #9ca3af; margin-top: 4px;">Queue: <b style="color:#ffffff;">{queue}</b> &nbsp; | &nbsp; Wait: <b style="color:#ffffff;">{wait} mins</b></div>
+                        <div style="margin-top: 8px; padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.35); color: #dce7ee; font-size: 12px;">{message}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("No charging hubs found for this route.")
+                
+                
     with bot_right:
         with st.container(border=True):
             st.markdown("#### Road Surface Breakdown")
@@ -602,11 +661,13 @@ def show_analysis(result):
                     bar_html += f"<div style='width: {pct}%; background-color: {color};' title='{surface_name}: {pct}%'></div>"
                     
                 list_html += "</ul>"
-                bar_html += "</div>"
+                bar_html += "</div>"  # Closes the flex container wrapper
                 
-                st.markdown(list_html + bar_html, unsafe_allow_html=True)
+                # Render the legend and visual breakdown bar
+                st.markdown(list_html, unsafe_allow_html=True)
+                st.markdown(bar_html, unsafe_allow_html=True)
             else:
-                st.info("Surface breakdown data unavailable.")
+                st.info("Road surface profile data unavailable.")
 def show_placeholder_page(title):
     st.title(title)
     st.info("This page can be developed later.")
