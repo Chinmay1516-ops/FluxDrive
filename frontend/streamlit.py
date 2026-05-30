@@ -22,8 +22,7 @@ if "result" not in st.session_state:
 
 if "dashboard_tab" not in st.session_state:
     st.session_state.dashboard_tab = "Route Planner"
-if "dashboard_tab" not in st.session_state:
-    st.session_state.dashboard_tab = "Route Planner"
+
 
 if "selected_route_index" not in st.session_state:
     st.session_state.selected_route_index = 0
@@ -289,17 +288,15 @@ def show_route_planner(result):
                 c4.write(f"{energy} kWh")
 
             if i == st.session_state.selected_route_index:
-                  st.success("Selected")
-
-                  if st.button("View Analysis", key=f"view_analysis_{i}", use_container_width=True):
-                     st.session_state.dashboard_tab = "Analysis"
-                     st.rerun()
-
+                st.success("Selected")
+                if st.button("View Analysis", key=f"view_analysis_{i}", use_container_width=True):
+                    st.session_state.dashboard_tab = "Analysis"
+                    st.rerun()
             else:
-             if st.button("Select Route", key=f"select_route_{i}", use_container_width=True):
-                st.session_state.selected_route_index = i
-                st.session_state.dashboard_tab = "Analysis"
-                st.rerun()
+                if st.button("Select Route", key=f"select_route_{i}", use_container_width=True):
+                    st.session_state.selected_route_index = i
+                    st.session_state.dashboard_tab = "Analysis"
+                    st.rerun()
 
 def show_analysis(result):
 
@@ -323,6 +320,47 @@ def show_analysis(result):
 
     st.markdown("## Route Analysis")
 
+    # --- CHANGE 1: PREMIUM 4-COLUMN ROUTE HEADER CARDS ---
+    source_val = result.get("source", "N/A").title()
+    dest_val = result.get("destination", "N/A").title()
+    vehicle_val = result.get("car_model", "EV")
+    start_batt_val = result.get("input_battery_percentage", "N/A")
+
+    hdr_c1, hdr_c2, hdr_c3, hdr_c4 = st.columns(4)
+
+    with hdr_c1:
+        st.markdown(f"""
+            <div style="background: rgba(4, 18, 27, 0.75); border: 1px solid rgba(100, 255, 90, 0.2); border-radius: 12px; padding: 14px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); margin-bottom: 15px;">
+                <div style="font-size: 11px; color: #9ca3af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;">From</div>
+                <div style="font-size: 22px; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{source_val}</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with hdr_c2:
+        st.markdown(f"""
+            <div style="background: rgba(4, 18, 27, 0.75); border: 1px solid rgba(100, 255, 90, 0.2); border-radius: 12px; padding: 14px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); margin-bottom: 15px;">
+                <div style="font-size: 11px; color: #9ca3af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;">To</div>
+                <div style="font-size: 22px; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{dest_val}</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with hdr_c3:
+        st.markdown(f"""
+            <div style="background: rgba(4, 18, 27, 0.75); border: 1px solid rgba(100, 255, 90, 0.2); border-radius: 12px; padding: 14px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); margin-bottom: 15px;">
+                <div style="font-size: 11px; color: #9ca3af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;">Vehicle</div>
+                <div style="font-size: 22px; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{vehicle_val}</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with hdr_c4:
+        st.markdown(f"""
+            <div style="background: rgba(4, 18, 27, 0.75); border: 1px solid rgba(100, 255, 90, 0.2); border-radius: 12px; padding: 14px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); margin-bottom: 15px;">
+                <div style="font-size: 11px; color: #9ca3af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;">Start Battery</div>
+                <div style="font-size: 22px; font-weight: 800; color: #64ff5a;">{start_batt_val}%</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # --- MAIN ANALYSIS LAYOUT ---
     top_left, top_right = st.columns([1.05, 1])
 
     with top_left:
@@ -368,25 +406,64 @@ def show_analysis(result):
             except:
                 st.progress(0)
 
-            st.caption(f"Weather: {weather}")
+            # --- CHANGE 4: PREMIUM WEATHER BADGE ---
+            st.markdown(f"""
+            <div style="margin-top: 18px; padding: 12px 16px; background: rgba(4, 18, 27, 0.6); border: 1px solid rgba(100, 255, 90, 0.25); border-radius: 10px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                <div style="font-size: 24px; line-height: 1;">🌦️</div>
+                <div>
+                    <div style="font-size: 11px; color: #9ca3af; text-transform: uppercase; font-weight: 800; letter-spacing: 0.8px; margin-bottom: 3px;">Live Environmental Mesh</div>
+                    <div style="font-size: 16px; font-weight: 900; color: #64ff5a; letter-spacing: 0.3px;">{weather}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
     mid_left, mid_right = st.columns([0.95, 1.15])
 
     with mid_left:
         with st.container(border=True):
             st.markdown("#### Battery Consumption Breakdown")
+            
+            st.markdown(f"""
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div>
+                    <div style="color: #dce7ee; font-size: 15px; font-weight: 800;">Driving Energy</div>
+                    <div style="color: #9ca3af; font-size: 12px; margin-top: 2px;">Total predicted mechanical consumption</div>
+                </div>
+                <div style="text-align: right; color: #ffffff; font-size: 24px; font-weight: 900; letter-spacing: 0.5px;">
+                    {energy_used} <span style="font-size: 14px; color: #9ca3af; font-weight: 600;">kWh</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div>
+                    <div style="color: #dce7ee; font-size: 15px; font-weight: 800;">Regenerative Braking</div>
+                    <div style="color: #9ca3af; font-size: 12px; margin-top: 2px;">Energy recovered while slowing down</div>
+                </div>
+                <div style="text-align: right; color: #22d45f; font-size: 24px; font-weight: 900; letter-spacing: 0.5px;">
+                    -{regen_saved} <span style="font-size: 14px; color: #9ca3af; font-weight: 600;">kWh</span>
+                </div>
+            </div>
 
-            st.write(f"**Driving Energy:** {energy_used} kWh")
-            st.caption("Total predicted energy consumption")
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div>
+                    <div style="color: #dce7ee; font-size: 15px; font-weight: 800;">Weather Engine</div>
+                    <div style="color: #9ca3af; font-size: 12px; margin-top: 2px;">Ambient mesh conditions used</div>
+                </div>
+                <div style="text-align: right; color: #64ff5a; font-size: 15px; font-weight: 700;">
+                    {weather}
+                </div>
+            </div>
 
-            st.write(f"**Regenerative Braking:** {regen_saved} kWh")
-            st.caption("Energy recovered while slowing down")
-
-            st.write(f"**Weather Used:** {weather}")
-            st.caption("Temperature and wind used in simulation")
-
-            st.write(f"**Battery Used:** {battery_used}%")
-            st.caption("Start battery minus arrival battery")
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+                <div>
+                    <div style="color: #dce7ee; font-size: 15px; font-weight: 800;">Net Battery Drain</div>
+                    <div style="color: #9ca3af; font-size: 12px; margin-top: 2px;">Start battery minus arrival battery</div>
+                </div>
+                <div style="text-align: right; color: #ffffff; font-size: 24px; font-weight: 900;">
+                    {battery_used}<span style="font-size: 18px; color: #9ca3af;">%</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
     with mid_right:
         with st.container(border=True):
@@ -413,21 +490,123 @@ def show_analysis(result):
             else:
                 st.info("Elevation data unavailable.")
 
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Distance", f"{distance} km")
-            c2.metric("Duration", f"{duration} min")
-            c3.metric("Energy", f"{energy_used} kWh")
+            # --- CHANGE 3: AI TELEMETRY ROW ---
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("#### AI Environmental Telemetry")
+    
+    uvp_c1, uvp_c2 = st.columns(2)
+    
+    with uvp_c1:
+        # Thermal Soak Memory Logic
+        thermal_temp = selected_route.get("thermal_soak_cabin_temp", 24.0)
+        hvac_spent = selected_route.get("hvac_spent_kwh", 0.0)
+        
+        is_hot = float(thermal_temp) > 30.0
+        t_color = "#ff4b4b" if is_hot else "#22d45f"
+        t_bg = "rgba(40, 10, 10, 0.6)" if is_hot else "rgba(4, 18, 27, 0.6)"
+        t_glow = "rgba(255, 75, 75, 0.15)" if is_hot else "rgba(34, 212, 95, 0.15)"
+        t_icon = "🔥 High Cabin Thermal Mass" if is_hot else "❄️ Optimal Thermal State"
+        
+        st.markdown(f"""
+        <div style="background: {t_bg}; border: 1px solid {t_color}; border-radius: 12px; padding: 20px; box-shadow: 0 0 20px {t_glow}; height: 100%;">
+            <div style="color: {t_color}; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">Thermal Memory Model</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                    <div style="font-size: 12px; color: #9ca3af;">Est. Cabin Soak Temp</div>
+                    <div style="font-size: 32px; font-weight: 900; color: #fff;">{thermal_temp}°C</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: #9ca3af;">Initial HVAC Penalty</div>
+                    <div style="font-size: 32px; font-weight: 900; color: #fff;">{hvac_spent} <span style="font-size:16px; color:#cbd5e1;">kWh</span></div>
+                </div>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; font-size: 13px; color: #dce7ee; border-left: 3px solid {t_color};">
+                <b>Status:</b> {t_icon}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    with st.container(border=True):
-        st.markdown("#### Turn-by-Turn Directions")
+    with uvp_c2:
+        # Solar Vectoring Logic
+        solar_metrics = selected_route.get("solar_vector_metrics", {})
+        bearing = solar_metrics.get("car_bearing_degrees", "N/A")
+        azimuth = solar_metrics.get("sun_azimuth_degrees", "N/A")
+        elevation = solar_metrics.get("sun_elevation_degrees", "N/A")
+        solar_status = solar_metrics.get("solar_incident_status", "Neutral Data")
+        solar_overhead = selected_route.get("solar_hvac_overhead_kwh", 0.0)
+        
+        s_color = "#ff9800"
+        st.markdown(f"""
+        <div style="background: rgba(20, 15, 5, 0.6); border: 1px solid {s_color}; border-radius: 12px; padding: 20px; box-shadow: 0 0 20px rgba(255, 152, 0, 0.15); height: 100%;">
+            <div style="color: {s_color}; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">☀️ Solar Insolation Vectoring</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                <div>
+                    <div style="font-size: 11px; color: #9ca3af;">Car Heading</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #fff;">{bearing}°</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: #9ca3af;">Sun Azimuth</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #fff;">{azimuth}°</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: #9ca3af;">Sun Elevation</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #fff;">{elevation}°</div>
+                </div>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; font-size: 13px; color: #dce7ee; border-left: 3px solid {s_color}; margin-bottom: 8px;">
+                <b>Vector Alert:</b> {solar_status}
+            </div>
+            <div style="font-size: 12px; color: #9ca3af; text-align: right;">Dynamic GHG Penalty: <b style="color:#fff; font-size:14px;">+{solar_overhead} kWh</b></div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        if directions:
-            for i, step in enumerate(directions[:7], start=1):
-                left, right = st.columns([5, 1])
-                left.write(f"**{i}.** {step.get('instruction', '')}")
-                right.caption(f"{step.get('distance_km', 'N/A')} km")
-        else:
-            st.info("Directions unavailable.")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- FOOTER: 60/40 SPLIT LAYOUT ---
+    bot_left, bot_right = st.columns([1.4, 1])
+    
+    with bot_left:
+        with st.container(border=True):
+            st.markdown("#### Turn-by-Turn Directions")
+            if directions:
+                for i, step in enumerate(directions[:7], start=1):
+                    left, right = st.columns([5, 1])
+                    left.write(f"**{i}.** {step.get('instruction', '')}")
+                    right.caption(f"{step.get('distance_km', 'N/A')} km")
+            else:
+                st.info("Directions unavailable.")
+
+    with bot_right:
+        with st.container(border=True):
+            st.markdown("#### Road Surface Breakdown")
+            surface_summary = selected_route.get("surface_data", {}).get("summary", [])
+            
+            if surface_summary:
+                surface_map = {
+                    0: "Paved (Unknown)", 1: "Unpaved", 2: "Macadam", 3: "Asphalt", 
+                    4: "Concrete", 5: "Cobblestone", 8: "Compacted", 10: "Gravel"
+                }
+                bar_colors = ["#1e90ff", "#9c27b0", "#22d45f", "#ff9800", "#e91e63"]
+                
+                list_html = "<ul style='color: #9ca3af; font-size: 13px; line-height: 2.2; list-style-type: none; padding-left: 0; margin-bottom: 0;'>"
+                bar_html = "<div style='display: flex; width: 100%; height: 10px; border-radius: 6px; overflow: hidden; margin-top: 15px; box-shadow: 0 0 10px rgba(0,0,0,0.3);'>"
+                
+                for idx, item in enumerate(surface_summary):
+                    val = item.get("value", 0)
+                    dist_km = item.get("distance", 0) / 1000 
+                    pct = item.get("amount", 0)
+                    color = bar_colors[idx % len(bar_colors)]
+                    surface_name = surface_map.get(val, f"Surface Type {val}")
+                    
+                    list_html += f"<li><span style='color:{color}; font-size:16px; margin-right:6px; vertical-align:middle;'>■</span> <b>{surface_name}</b>: {dist_km:.1f} km <span style='color:#64748b; font-size:11px;'>({pct:.1f}%)</span></li>"
+                    bar_html += f"<div style='width: {pct}%; background-color: {color};' title='{surface_name}: {pct}%'></div>"
+                    
+                list_html += "</ul>"
+                bar_html += "</div>"
+                
+                st.markdown(list_html + bar_html, unsafe_allow_html=True)
+            else:
+                st.info("Surface breakdown data unavailable.")
 def show_placeholder_page(title):
     st.title(title)
     st.info("This page can be developed later.")
