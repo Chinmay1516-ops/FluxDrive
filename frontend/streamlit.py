@@ -10,7 +10,7 @@ st.set_page_config(page_title="FluxDrive", layout="wide")
 
 
 def load_css():
-    with open("style.css", "r", encoding="utf-8") as f:
+    with open("frontend/style.css", "r", encoding="utf-8") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
