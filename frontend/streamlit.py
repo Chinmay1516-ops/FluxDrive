@@ -1,3 +1,10 @@
+import os
+import sys
+import asyncio
+
+# This line tells Python to look in the main root folder for main.py
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from main import getdata
 import streamlit as st
 import requests
 import folium
@@ -799,26 +806,27 @@ if calculate:
         }
 
         try:
-            response = requests.post(api_url, data=payload)
+            # ✅ CALLING FASTAPI ENGINE DIRECTLY NATIVELY
+            result = asyncio.run(getdata(
+                Source=source,
+                Destination=destination,
+                Car_Model=vehicle,
+                Battery_percentage=int(battery)
+            ))
 
-            if response.status_code == 200:
-                result = response.json()
-                print(result)
+            print(result)
+            
+            if result.get("status") == "failed":
+                st.error(result.get("error", "An unknown error occurred."))
+            else:
                 routes = result.get("routes", [])
                 selected_route = routes[0] if routes else {}
 
-                if "error" in result:
-                    st.error(result["error"])
-                else:
-                    st.session_state.result = result
-                    st.session_state.page = "result"
-                    st.session_state.dashboard_tab = "Route Planner"
-                    st.rerun()
-
-            else:
-                st.error(f"Backend error: {response.status_code}")
-                st.write(response.text)
+                st.session_state.result = result
+                st.session_state.page = "result"
+                st.session_state.dashboard_tab = "Route Planner"
+                st.rerun()
 
         except Exception as e:
-            st.error("Could not connect to backend.")
+            st.error("Error executing simulation logic natively.")
             st.write(e)
