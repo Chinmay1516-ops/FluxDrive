@@ -1,3 +1,4 @@
+import streamlit as st
 from fastapi import FastAPI, Form
 from db import SessionLocal
 from models import EVCar
@@ -17,8 +18,6 @@ app = FastAPI()
 create_tables()
 seed_dummy_cars()
 
-ORS_KEY = os.getenv("ORS_KEY")
-WEATHER_KEY = os.getenv("WEATHER_KEY")
 
 
 async def get_charging_hubs_logic(source_coords: Dict[str, float], dest_coords: Dict[str, float]) -> List[Dict]:
@@ -120,9 +119,15 @@ async def getdata(
 ):
     db = SessionLocal()
 
-    # ✅ FETCH KEYS DYNAMICALLY INSIDE THE FUNCTION
-    LIVE_ORS_KEY = os.getenv("ORS_KEY")
-    LIVE_WEATHER_KEY = os.getenv("WEATHER_KEY")
+    try:
+        LIVE_ORS_KEY = st.secrets["ORS_KEY"]
+        LIVE_WEATHER_KEY = st.secrets["WEATHER_KEY"]
+    except Exception:
+        LIVE_ORS_KEY = os.getenv("ORS_KEY")
+        LIVE_WEATHER_KEY = os.getenv("WEATHER_KEY")
+    
+    if not LIVE_ORS_KEY or not LIVE_WEATHER_KEY:
+        return {"status": "failed", "error": "API Keys missing! Check Streamlit Secrets formatting."}
 
     try:
         selected_car = db.query(EVCar).filter(EVCar.name == Car_Model).first()
