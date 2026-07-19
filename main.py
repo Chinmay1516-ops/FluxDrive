@@ -120,6 +120,10 @@ async def getdata(
 ):
     db = SessionLocal()
 
+    # ✅ FETCH KEYS DYNAMICALLY INSIDE THE FUNCTION
+    LIVE_ORS_KEY = os.getenv("ORS_KEY")
+    LIVE_WEATHER_KEY = os.getenv("WEATHER_KEY")
+
     try:
         selected_car = db.query(EVCar).filter(EVCar.name == Car_Model).first()
 
@@ -142,14 +146,15 @@ async def getdata(
             "frontal_area": selected_car.frontal_area
         }
 
+        
         result = find_optimal_speed(
             car_specs=car_specs,
             start_lat=source_coords["lat"],
             start_lon=source_coords["lon"],
             end_lat=destination_coords["lat"],
             end_lon=destination_coords["lon"],
-            ors_key=ORS_KEY,
-            weather_key=WEATHER_KEY,
+            ors_key=LIVE_ORS_KEY,
+            weather_key=LIVE_WEATHER_KEY,
             current_battery_percent=Battery_percentage 
         )
 
